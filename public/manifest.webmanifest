@@ -1,0 +1,16 @@
+{
+  "name": "Mahmudul Hasan",
+  "short_name": "Mahmudul",
+  "description": "Portfolio of Mahmudul Hasan, a Computer Science & Engineering student building AI-powered systems, full-stack applications, developer tools, and research-driven technology.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0d",
+  "theme_color": "#0a0a0d",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
