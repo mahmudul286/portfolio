@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { siteConfig } from "@/config/site";
+import { withBasePath } from "@/lib/portfolio/paths";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,7 +25,10 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.seo.url),
+  // NOTE: We intentionally do NOT set `metadataBase` here. When set, Next.js
+  // resolves relative icon/manifest URLs against it — which breaks asset
+  // loading on GitHub Pages project URLs (https://<user>.github.io/<repo>/).
+  // Without metadataBase, Next.js prefixes `basePath` correctly.
   title: {
     default: siteConfig.seo.title,
     template: `%s — ${siteConfig.name}`,
@@ -52,9 +56,10 @@ export const metadata: Metadata = {
   authors: [{ name: siteConfig.name }],
   creator: siteConfig.name,
   publisher: siteConfig.name,
-  icons: {
-    icon: "/favicon.svg",
-  },
+  // We use manual <link> tags in <head> below instead of `metadata.icons` /
+  // `metadata.manifest` because Next.js does NOT auto-prefix `basePath` to
+  // these metadata URLs in static export. Manual links with withBasePath()
+  // work correctly on both project pages and user pages.
   alternates: {
     canonical: siteConfig.seo.url,
   },
@@ -103,8 +108,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="dark">
       <head>
-        {/* Static manifest for GitHub Pages compatibility */}
-        <link rel="manifest" href="/manifest.webmanifest" />
+        {/* Manually prefix basePath — Next.js metadata API does not auto-prefix
+            these URLs in static export mode. */}
+        <link rel="icon" href={withBasePath("/favicon.svg")} type="image/svg+xml" />
+        <link rel="manifest" href={withBasePath("/manifest.webmanifest")} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased bg-background text-foreground font-sans selection:bg-primary/20 selection:text-foreground`}

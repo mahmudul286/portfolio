@@ -1,17 +1,11 @@
 # Deploy Mahmudul Hasan's portfolio to GitHub Pages.
 #
-# Two deployment modes — controlled by the `BASE_PATH` repository variable
-# (Settings → Secrets and variables → Actions → Variables):
+# Auto-detects the correct basePath:
+#   - Project page  (repo "portfolio")  → https://<user>.github.io/portfolio/
+#   - User page     (repo "<user>.github.io") → https://<user>.github.io/
 #
-#   1. PROJECT PAGE (default) — https://<username>.github.io/<repo>/
-#      Leave BASE_PATH unset OR set it to `/<repo-name>` (e.g. `/portfolio`).
-#
-#   2. USER / ORG PAGE — https://<username>.github.io/
-#      Set BASE_PATH to an empty string (just leave the variable blank).
-#      NOTE: user pages must live in a repo named `<username>.github.io`.
-#
-# The workflow runs on every push to `main` (or `master`) and on manual dispatch.
-# It builds the Next.js app as a static export and publishes `out/` to Pages.
+# Override by setting the `BASE_PATH` repository variable
+# (Settings → Secrets and variables → Actions → Variables).
 
 name: Deploy to GitHub Pages
 
@@ -20,13 +14,11 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
-# Required by GitHub Pages deployment
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow one concurrent deployment
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -52,16 +44,39 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Compute base path
+        id: basePath
+        run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          USER_SET="${{ vars.BASE_PATH }}"
+          if [ -n "$USER_SET" ]; then
+            # User explicitly set BASE_PATH — use it as-is (can be empty for user pages)
+            echo "value=$USER_SET" >> "$GITHUB_OUTPUT"
+          elif [[ "$REPO_NAME" == *.github.io ]]; then
+            # User/org page — serve from root
+            echo "value=" >> "$GITHUB_OUTPUT"
+          else
+            # Project page — default to /<repo-name>
+            echo "value=/$REPO_NAME" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Print resolved base path
+        run: echo "Using basePath=${{ steps.basePath.outputs.value }}"
+
       - name: Build static export
         env:
-          # Default to /repo-name for project pages. Override via repo variable
-          # BASE_PATH if your repo is named differently or you want a user page.
-          NEXT_PUBLIC_BASE_PATH: ${{ vars.BASE_PATH }}
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.basePath.outputs.value }}
         run: bun run build:static
 
       - name: Add .nojekyll
-        # Bypass Jekyll so _next/ assets are not stripped by GitHub Pages
         run: touch out/.nojekyll
+
+      - name: Verify basePath applied to HTML
+        run: |
+          echo "--- Checking index.html for basePath-prefixed assets ---"
+          grep -oE '(href|src)="[^"]*_next/[^"]*"' out/index.html | head -3 || true
+          echo "---"
+          grep -oE 'href="[^"]*manifest[^"]*"' out/index.html | head -1 || true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -20,6 +20,9 @@ export const siteConfig = {
   // Replace with real email when ready
   email: "ADD_EMAIL",
   // CV file lives in /public/Mahmudul-Hasan-CV.pdf
+  // NOTE: this is the path WITHOUT basePath — the CV button prepends
+  // `import.meta.env.BASE_PATH` (Next.js exposes basePath via this) at runtime
+  // so the download link works on both project pages and user pages.
   cvPath: "/Mahmudul-Hasan-CV.pdf",
   cvFileName: "Mahmudul-Hasan-CV.pdf",
   social: {

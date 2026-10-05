@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { siteConfig } from "@/config/site";
+import { withBasePath } from "@/lib/portfolio/paths";
 import { DownloadIcon } from "./icons";
 
 interface CVButtonProps {
@@ -42,7 +43,7 @@ export function CVButton({
 
   return (
     <motion.a
-      href={siteConfig.cvPath}
+      href={withBasePath(siteConfig.cvPath)}
       download={siteConfig.cvFileName}
       data-cursor="button"
       whileHover={{ y: -2 }}
